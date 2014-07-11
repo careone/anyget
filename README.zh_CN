@@ -1,0 +1,44 @@
+coding: utf-8
+
+软件包名称: system-grasp
+命令名称: anyget
+
+homepage: 
+https://sourceforge.net/projects/emacslocale/files/system-grasp/
+
+更新日期: 2014-07-12
+ 
+
+用法: anyget [选项]
+
+选项
+      -l, --list         显示 ~/anyget/anyget.list 文件中的可用下载地址列表
+      -d, --download     读取 ~/anyget/anyget.list 文件中的可用下载列表并进行下载 
+      -i, --init         生成默认配置文件 (~/anyget/anyget.list 和 ~/anyget/anyget.cfg)
+
+      --off, --disable [文件1 文件2 ...]
+          禁用指定文件中的全部可用下载列表(在行开头添加 #! 记号)。
+          如果未指定文件，则默认使用 ~/anyget/anyget.list
+      --on, --enable [文件1 文件2 ...]
+          启用指定文件中的可用下载列表(修改以 #! 开头的行并移除 #! 标记)。
+          如果未指定文件，则默认使用 ~/anyget/anyget.list
+ 
+      -v, --version    显示版本信息并退出
+      -h, --help       显示帮助信息并退出
+
+ ============
+
+* 技巧1：
+默认第1次运行后，程序会自动创建一个 ~/anyget/anyget.list 模板文件。
+每行代表一个文件地址。用户可以自己把要下载的链接地址复制到这个文件即可。
+
+** 如果要取消某行记录不用下载，只需要在对应行最前面加上一个英文井号 (#)，程序下载时
+  便会自动忽略这一行。
+
+  	说明：目前只支持下载以 http, https和 ftp开头的链接地址（不区分英文字母大小写）。
+
+* 技巧2：
+可以通过在 ~/anyget/anyget.list 文件中加入相应的链接，再运行 
+anyget -d 
+来自动批量下载歌曲，视频，软件包，电子书， 安卓 apk 格式手机软件包等。
+更多用途，还需要用户自己来体会.....
