@@ -202,7 +202,7 @@ for option in "$@"; do
 	OPT="$1"
 	echo "edit URLs in download resource file ~/$DOTDIR/${APP}.list ..."
 	# $DISPLAY: null means run in console (Ctrl+Alt+F1-F6), 
-	#   	    and 0:0 or similar means in Graphic Interface
+	#   	    and (:0), (:0.0) or similar means in Graphic Interface
 	if [ -z "$DISPLAY" ] ; then
 	  vi -n "$LIST"
 	elif which gedit &>/dev/null; then
