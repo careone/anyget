@@ -1,7 +1,7 @@
 #! /bin/bash
 ## updated by Careone <emacslocale@126.com>, 2014-07-12
 ## package name: system-grasp
-## command/file name: anyget
+## command: anyget
 #set -x
 
 VERSION='0.4'
@@ -11,21 +11,22 @@ APP='anyget'
 
 prefix="/usr/local"
 APP_GDIR="$prefix/share"	#global share directory
-APPDIR="$HOME/$APP"		#user dircetory
-APPCFG="$APPDIR/${APP}.cfg"	#configure file name
-LIST="$APPDIR/${APP}.list"	#default URL list resource file
+DOTDIR=".$APP"
+
+APPCFG="$HOME/$DOTDIR/${APP}.cfg"	#configure file name
+LIST="$HOME/$DOTDIR/${APP}.list"	#default URL list resource file
 DEFAULT_TODIR="$HOME/Downloads"	#default path to save downloaded files
 
 MAX_DOWNS="3"	#todo function and not work yet
 
-DOWNLOADING="WGETING"	#creat a file with suffix to tell user:
-			#  the file is in downloading with wget
+#creat a file with speical suffix to tell user file is downloading with wget
+DOWNLOADING="WGETING"
 
 # keep log or not
 KEEPLOG="0"	#switch, 1=keep log; 0=no log. default=0
-LOGDIR="$APPDIR"
+LOGDIR="$HOME/$DOTDIR"
 LOG="$LOGDIR/${APP}.log"
-LOG_LIMIT="65536" #max size of log file: 65536 = 1024*64 byte = 64K
+LOG_LIMIT="65536" #max size of log file: 65536 byte = 64K
 
 ## ---- debug switches ----
 DEBUG=0	#1: show debug output; 0: quiet
@@ -48,15 +49,16 @@ TIMESTAMP="$(date +"%Y-%m-%d")"
 usage () {
     cat <<EOF
 Usage: $APP [OPTION]
-auto download files by URLs in resource file (~/$APP/$APP.list). now support
+auto download files by URLs in resource file (~/$DOTDIR/$APP.list). now support
 http, https and ftp only
 
 OPTIONS
-      -l, --list         list lines to be downloaded in file ~/$APP/${APP}.list
-      -d, --download     read ~/$APP/${APP}.list and auto download files by orders
+      -l, --list         list lines to be downloaded in file ~/$DOTDIR/${APP}.list
+      -d, --download     read ~/$DOTDIR/${APP}.list and auto download files by orders
       -md, --multi-download     download multi files at the same time (in background)
-      -i, --init         generate default configure file (~/$APP/${APP}.list and ~/$APP/${APP}.cfg)
-      --sample           show sample file for ~/$APP/$APP.list
+      -e, --edit         edit URLs in download resource file ~/$DOTDIR/${APP}.list
+      -i, --init         generate default configure file (~/$DOTDIR/${APP}.list and ~/$DOTDIR/${APP}.cfg)
+      --sample           show sample file for ~/$DOTDIR/$APP.list
 
       --sub, --date-subdir      set save path to sub-directory which named by
              current date, such as ~/Downloads/2014-06-22/
@@ -65,10 +67,10 @@ OPTIONS
 
       --off, --disable [FILE1 FILE2 ...]
           disable all available lines in special file(s), by add #! tag in
-          line beginning. if no file given, use ~/$APP/${APP}.list as default
+          line beginning. if no file given, use ~/$DOTDIR/${APP}.list as default
       --on, --enable [FILE1 FILE2 ...]
           enable all available lines in special file(s), by remove #! tag in
-          line beginning. if no file given, use ~/$APP/${APP}.list as default
+          line beginning. if no file given, use ~/$DOTDIR/${APP}.list as default
 
       -v, --version    print the version information and exit
       -h, --help       print this message and exit
@@ -84,15 +86,16 @@ EOF
 usage_zh_CN () {
 cat <<EOF
 用法: $APP [选项]
-自动下载资源文件(~/$APP/$APP.list)中的网址指向的文件。目前只支持
+自动下载资源文件(~/$DOTDIR/$APP.list)中的网址指向的文件。目前只支持
 http, https 和 ftp 地址
 
 选项
-      -l, --list         显示 ~/$APP/${APP}.list 文件中的可用下载地址列表
-      -d, --download     读取 ~/$APP/${APP}.list 文件中的可用下载列表并按顺序进行下载
+      -l, --list         显示 ~/$DOTDIR/${APP}.list 文件中的可用下载地址列表
+      -d, --download     读取 ~/$DOTDIR/${APP}.list 文件中的可用下载列表并按顺序进行下载
       -md, --multi-download     同时下载多个文件（以后台方式运行）
-      -i, --init         生成默认配置文件 (~/$APP/${APP}.list 和 ~/$APP/${APP}.cfg)
-      --sample           显示下载列表资料文件 ~/$APP/$APP.list 的样例
+      -e, --edit         编辑下载资源文件 ~/$DOTDIR/${APP}.list 中的文件下载地址
+      -i, --init         生成默认配置文件 (~/$DOTDIR/${APP}.list 和 ~/$DOTDIR/${APP}.cfg)
+      --sample           显示下载列表资料文件 ~/$DOTDIR/$APP.list 的样例
 
       --sub, --date-subdir       设置保存路径为以当前日期为文件名的子目录，如
              ~/Downloads/2014-06-22/ 
@@ -101,10 +104,10 @@ http, https 和 ftp 地址
  
       --off, --disable [文件1 文件2 ...]
           禁用指定文件中的全部可用下载列表(在行开头添加 #! 记号)。
-          如果未指定文件，则默认使用 ~/$APP/${APP}.list
+          如果未指定文件，则默认使用 ~/$DOTDIR/${APP}.list
       --on, --enable [文件1 文件2 ...]
           启用指定文件中的可用下载列表(修改以 #! 开头的行并移除 #! 标记)。
-          如果未指定文件，则默认使用 ~/$APP/${APP}.list
+          如果未指定文件，则默认使用 ~/$DOTDIR/${APP}.list
 
       -v, --version    显示版本信息并退出
       -h, --help       显示帮助信息并退出
@@ -136,14 +139,13 @@ cat <<EOF
 ### 000: system-grasp README.zh_CN
 http://sourceforge.net/projects/emacslocale/files/system-grasp/README.zh_CN
 
-
 ### 001: pdf reader
 #!http://cdn01.foxitsoftware.com/pub/foxit/reader/desktop/linux/1.x/1.1/enu/FoxitReader_1.1.0_i386.deb
 #http://ardownload.adobe.com/pub/adobe/reader/unix/8.x/8.1.7/chs/AdobeReader_chs-8.1.7-1.i386.deb
 
 ### 002: Sogou Chinese input method for Ubuntu/Debian i386
 #http://pinyin.sogou.com/linux/download.php?f=linux&bit=32
-#http://download.ime.sogou.com/1402921811/sogou_pinyin_linux_1.0.0.0033_i386.deb?st=TC90pB3phT5qwWCi8SvM2g&e=1403426800&fn=sogou_pinyin_linux_1.0.0.0033_i386.deb
+#http://download.ime.sogou.com/1402921811/sogou_pinyin_linux_1.0.0.0033_i386.deb
 
 ### 101: WPS Office for Linux
 ## http://community.wps.cn/download/
@@ -155,11 +157,15 @@ EOF
 }
 
 ## change current work directory to ~/ , for safe
-# if setting TODIR (in ~/anyget/anyget.cfg) set to a bad or void string by mistake, 
-# the TODIR directory should be ~/BAD_TODIR, and not be /BAD_TODIR
+# if setting TODIR (in ~/.anyget/anyget.cfg) set to a bad or void string by mistake, 
+# the TODIR directory should be ~/BAD_TODIR, and not be /BAD_TODIR, which are not allowed
 cd "$HOME"
 
 ## PART 2: main
+
+  if [ ! -d "$HOME/$DOTDIR/" ]; then
+    mkdir -p "$HOME/$DOTDIR/"
+  fi
 
 # keep log or not
 if [ "$KEEPLOG" = 1 ]; then
@@ -172,7 +178,7 @@ if [ "$KEEPLOG" = 1 ]; then
     touch "$LOG"
   fi
 
-LOG_SIZE=`stat -c %s "$LOG"`
+LOG_SIZE=`stat -c %s "$LOG" 2>/dev/null`
 
   if [ -s "$LOG" ] && [ "$LOG_SIZE" -ge "$LOG_LIMIT" ];then
     mv -f "$LOG" "${LOG}.last" &>/dev/null
@@ -188,8 +194,22 @@ for option in "$@"; do
     -h | --help)
 	if "usage_$CLANG" 2>/dev/null &>/dev/null; then
 	   "usage_$CLANG"
-	else
-	  usage
+	else usage
+	fi
+	exit 0 ;;
+
+    -e | --edit)
+	OPT="$1"
+	echo "edit URLs in download resource file ~/$DOTDIR/${APP}.list ..."
+	if which gedit 2>/dev/null &>/dev/null; then
+	  if [ "$?" = 0 ]; then
+	    gedit "$LIST" &
+	  fi
+	elif which kate 2>/dev/null &>/dev/null; then
+	  kate "$LIST" &
+	elif which mousepad 2>/dev/null &>/dev/null; then
+	  mousepad "$LIST" &
+	else vi -n "$LIST"
 	fi
 	exit 0 ;;
 
@@ -227,14 +247,14 @@ for option in "$@"; do
     -i | --init)
 	# generate default configure file.
 	# Notice: default configure file can be auto creat after first running with option -d, --download
-	if [ ! -d "$APPDIR" ]; then
-	  mkdir -p "$APPDIR"
+	if [ ! -d "$HOME/$DOTDIR" ]; then
+	  mkdir -p "$HOME/$DOTDIR"
 	fi
 
 	if [ ! -e "$APPCFG" ]; then
-	  echo "creat default configure file... (~/$APP/${APP}.cfg)"
+	  echo "creat default configure file... (~/$DOTDIR/${APP}.cfg)"
 	else
-	  echo "restore configure file to default... (~/$APP/${APP}.cfg)"
+	  echo "restore configure file to default... (~/$DOTDIR/${APP}.cfg)"
 	  cp -f "$APPCFG" "${APPCFG}_backup"	#backup frist
 	fi
 	  creatDefaultCfg > "$APPCFG"
@@ -265,7 +285,7 @@ for option in "$@"; do
 	## usage: --sample
 	# show anyget.list sample files
 
-	echo -e "* sample for list resource file (~/$APP/${APP}.list):\n"
+	echo -e "* sample for list resource file (~/$DOTDIR/${APP}.list):\n"
 	echo " -------------- "
 	# show first 5 lines only
 	creatDefaultList | head -5
@@ -278,19 +298,26 @@ for option in "$@"; do
 	## download or show list only
 	OPT="$1"
 
+	# extra operation:
+	# creat default configure file after first running
+	if [ ! -e "$APPCFG" ]; then
+	  echo "creat default configure file (~$HOME/$DOTDIR/$APP.cfg)..."
+	  creatDefaultCfg > "$APPCFG"
+	fi
+
 	case "$OPT" in
     	  -d | --download)
-	    echo "* download files by orders (read download lists from file ~/$APP/${APP}.list)..."
+	    echo "* download files by orders (read download lists from file ~/$DOTDIR/${APP}.list)..."
       		;;
 	  -md | --multi-download) 
 	    #download multi file at the same time, in background
- 	    echo "* download MULTI files at one time (read download lists from file ~/$APP/${APP}.list)..."
+ 	    echo "* download MULTI files at one time (read download lists from file ~/$DOTDIR/${APP}.list)..."
 		;;
 	 -l | --list)
- 	    echo "* list lines to be downloaded in file \`~/$APP/${APP}.list'..."
+ 	    echo "* list lines to be downloaded in file \`~/$DOTDIR/${APP}.list'..."
 		;;
     	  *)echo "Error: unknown option \`$OPT' (E292)" 1>&2
-			;;
+		exit 0	;;
 	esac
 
 	declare -a URLS URLS01 URLS02
@@ -309,10 +336,10 @@ for option in "$@"; do
 
 	cd "$HOME"
 
-	SETTING='TODIR'
+	SETTING='TODIR'	#string
 	
 	#need fix, 2014-06-26
-	if [ -r "$APPCFG" ]; then	#probe format 1 frist
+	if [ -r "$APPCFG" ]; then	#probe for format 1 frist
 	  if grep ^"$SETTING=" "$APPCFG" 2>/dev/null &>/dev/null; then
 	    TODIR=$(grep ^"$SETTING"=\".*\" "$APPCFG" 2>/dev/null | head -1 | cut -d'=' -f2 | cut -d'#' -f1 | cut -d'"' -f2)
 
@@ -321,14 +348,14 @@ for option in "$@"; do
 	      echo "L295 TODIR = '$TODIR'" ; #exit 0;
 	    fi
 
-	  if [ -z "$TODIR" ]; then	#if format 1 not found, try probe format 2
+	  if [ -z "$TODIR" ]; then	#if format 1 not found, try probe for format 2
 	    TODIR=$(grep ^"$SETTING"=\'.*\' "$APPCFG" 2>/dev/null | head -1 | cut -d'=' -f2 | cut -d'#' -f1 | cut -d"'" -f2)
 	    if [ "$DEBUG" = 1 ] ; then
 	    echo "L300 TODIR = '$TODIR'" ; #exit 0;
 	    fi
 	  fi
 	
-	    #if format 1/2 not found, try probe format 3
+	    #if format 1/2 not found, try probe for format 3
 	  if [ -z "$TODIR" ]; then
 	      TODIR=$(grep ^"$SETTING=" "$APPCFG" 2>/dev/null | head -1 | cut -d'=' -f2 | cut -d'#' -f1 | sed "/\t/s//\ /g;/'/s///g;/\"/s///g" | cut -d' ' -f1) 
 	      if [ "$DEBUG" = 1 ] ; then
@@ -351,27 +378,27 @@ for option in "$@"; do
 	    # if TODIR include wild charactor(s), or other special charactors 
 	    # such as '$', ~/ in some cases, or set as '..', '../', / or /home
 	    # or any others, then force use default setting, for safe
-	        echo "  Warnning: void or unaccepted saving path setting (in file ~/$APP/${APP}.cfg):" 1>&2
+	        echo "  Warnning: void or unaccepted saving path setting (in file ~/$DOTDIR/${APP}.cfg):" 1>&2
 		echo "    (`grep "^TODIR=" "$APPCFG" 2>/dev/null | head -1`)" 1>&2
-		echo -e "  force use default instead.\n" 1>&2
+		echo -e "  force use default.\n" 1>&2
 	      TODIR="${DEFAULT_TODIR}" 
 		;;
 	  esac	
 
 	    if [ "$DEBUG" = 1 ] ; then
-	      echo "L345 TODIR = '$TODIR'" ; exit 0;
+	      echo "L345 TODIR = '$TODIR'" ; #exit 0;
 	    fi
 
 	  if [ -z "$TODIR" ]; then 
 	    TODIR="${DEFAULT_TODIR}" 
 	    if [ "$DEBUG" = 1 ] ; then
-	      echo "L351 TODIR = '$TODIR'" ; #exit 0;
+	      echo "L351 check 1: TODIR = '$TODIR'" ; #exit 0;
 	    fi
   	  fi
  
 	else TODIR="${DEFAULT_TODIR}"	#default save path
 	  if [ "$DEBUG" = 1 ] ; then
-	    echo "L357 TODIR = '$TODIR'" ; #exit 0;
+	    echo "L357 check 2: TODIR = '$TODIR'" ; #exit 0;
 	  fi	  
 	fi fi 
 
@@ -408,24 +435,23 @@ for option in "$@"; do
 	  echo "  Notice: setting \`SUBTODIR_BY_DATE' enabled!"
 	fi
 
-
 	#-----------------
 	#debug break node
 
 	if [ "$DEBUG" = 1 ] ; then
-	echo "SUBTODIR_BY_DATE=$SUBTODIR_BY_DATE"
-	echo
-	grep "$SETTING=" "$APPCFG"
+	  echo "  (check setting in config: `grep "$SETTING=" "$APPCFG"`)"
+	  echo
+	  echo "SUBTODIR_BY_DATE=$SUBTODIR_BY_DATE"
 	  #exit 0
 	fi 
 	#=================
 
 	# show save path TODIR setting
-	echo -e "  current saving path (TODIR): \`$TODIR'\n"
+	echo -e "  saving path (TODIR): \`$TODIR'\n"
 	#exit 0
 
-	if [ ! -d "$APPDIR" ]; then
-	  mkdir -p "$APPDIR"
+	if [ ! -d "$HOME/$DOTDIR" ]; then
+	  mkdir -p "$HOME/$DOTDIR"
 	fi
 
 	#
@@ -437,7 +463,7 @@ for option in "$@"; do
 	## get resource file LIST
 
 	if [ ! -e "$LIST" ]; then
-	  echo "Notice: no download URL list file found. creat a blank one (~/$APP/${APP}.list)"
+	  echo "Notice: no download URL list file found. creat a blank one (~/$DOTDIR/${APP}.list)"
 	  touch "$LIST"
 	  creatDefaultList > "$LIST"
 	fi
@@ -452,7 +478,7 @@ for option in "$@"; do
 	    fi
 
 	## ready to download
-	echo "  check available URL list (in file ~/$APP/${APP}.list)..."
+	echo "  check available URL list (in file ~/$DOTDIR/${APP}.list)..."
 	URLS01=( `grep -i "^http" "$LIST" 2>/dev/null | sed '/\/$/s///g'` )
 	URLS02=( `grep -i "^ftp" "$LIST" 2>/dev/null | sed '/\/$/s///g'` )
 
@@ -496,13 +522,9 @@ for option in "$@"; do
 	#---------
 
 	case "$OPT" in
-	  -l | --list)
+	  -l | --list)DOWNLOAD=0;	exit 0 ;;
 	    # for option --list, exit now and never download
-	    DOWNLOAD=0
-	    #exit 0 
-		;;
-	  *)DOWNLOAD=1
-	   	;;
+    	  *)DOWNLOAD=1 ;;
 	esac
 
 	## tips: show line 52
@@ -521,7 +543,7 @@ for option in "$@"; do
 	  fi
 
 	  for URL in "${URLS[@]}"; do
-	    BASENAME=`basename -- "$URL"`
+	    BASENAME=`basename -- "$URL" | cut -d'?' -f1`
 	    LOCK="${BASENAME}.LOCK"
 
 	    echo "$ID* downloading and save as \`$TODIR/$BASENAME'..."
@@ -582,27 +604,16 @@ for option in "$@"; do
 	    fi 
 	    echo
 	  done
-	 
 
-	if [ "$?" = 0 ]; then
-	  echo "  Done."
-	fi
-
-	else echo "Notice: no available URL need to download. ignore." 1>&2
-
+	  if [ "$?" = 0 ]; then
+	    echo "  Done."
+	  fi
+	else echo -n "Notice: download completed, or no more available URLs"
+	  echo " need downloaded. ignore."
 	fi 
 	
 	unset URLS URLS01 URLS02 URL LINES ID
-
-	# extra operation:
-	# creat default configure file after first running
-	if [ ! -e "$APPCFG" ]; then
-	  echo "creat default configure file (`basename -- "$APPCFG"`)"
-	  creatDefaultCfg > "$APPCFG"
-	fi
-
 	shift
-
 	exit 0 ;;
 
     --disable | --off | --enable | --on)
@@ -621,7 +632,7 @@ for option in "$@"; do
 	declare -a LISTS
 	#shift
 	if [ "$#" -le 1 ]; then
-	  LISTS=( "$APPDIR/${APP}.list" )
+	  LISTS=( "$HOME/$DOTDIR/${APP}.list" )
 	else LISTS=( "$@" )
 	  unset LISTS[0]	#remove string '$1', which is an option string
 	fi
