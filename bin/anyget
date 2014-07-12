@@ -201,15 +201,19 @@ for option in "$@"; do
     -e | --edit)
 	OPT="$1"
 	echo "edit URLs in download resource file ~/$DOTDIR/${APP}.list ..."
-	if which gedit 2>/dev/null &>/dev/null; then
-	  if [ "$?" = 0 ]; then
-	    gedit "$LIST" &
-	  fi
-	elif which kate 2>/dev/null &>/dev/null; then
-	  kate "$LIST" &
-	elif which mousepad 2>/dev/null &>/dev/null; then
-	  mousepad "$LIST" &
-	else vi -n "$LIST"
+	# $DISPLAY: null means run in console (Ctrl+Alt+F1-F6), 
+	#   	    and 0:0 or similar means in Graphic Interface
+	if [ -z "$DISPLAY" ] ; then
+	  vi -n "$LIST"
+	elif which gedit &>/dev/null; then
+	  gedit "$LIST" &	#for GNOME
+	elif which kate &>/dev/null; then
+	  kate "$LIST" &	#for KDE
+	elif which mousepad &>/dev/null; then
+	  mousepad "$LIST" &	#for Xfce
+	elif which leafpad &>/dev/null; then
+	  leafpad "$LIST" &	#for LXDE
+	else xdg-open "$LIST" &		#for unknown
 	fi
 	exit 0 ;;
 
