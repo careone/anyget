@@ -1,10 +1,10 @@
 #! /bin/bash
-## updated by Careone <emacslocale@126.com>, 2014-07-12
+## updated by Careone <emacslocale@126.com>, 2014-07-16
 ## package name: system-grasp
 ## command: anyget
 #set -x
 
-VERSION='0.4'
+VERSION='0.4.1'
 
 ## defines
 APP='anyget'
@@ -203,17 +203,14 @@ for option in "$@"; do
 	echo "edit URLs in download resource file ~/$DOTDIR/${APP}.list ..."
 	# $DISPLAY: null means run in console (Ctrl+Alt+F1-F6), 
 	#   	    and (:0), (:0.0) or similar means in Graphic Interface
-	if [ -z "$DISPLAY" ] ; then
-	  vi -n "$LIST"
-	elif which gedit &>/dev/null; then
-	  gedit "$LIST" &	#for GNOME
-	elif which kate &>/dev/null; then
-	  kate "$LIST" &	#for KDE
-	elif which mousepad &>/dev/null; then
-	  mousepad "$LIST" &	#for Xfce
-	elif which leafpad &>/dev/null; then
-	  leafpad "$LIST" &	#for LXDE
-	else xdg-open "$LIST" &		#for unknown
+	if [ -z "$DISPLAY" ] ; then 	#in console mode
+	  if [ ! -z "$EDITOR" ] ; then
+	    "$EDITOR" "$LIST"
+	  else
+	    vi "$LIST"
+	  fi
+	else	#in GUI mode
+	  xdg-open "$LIST" &
 	fi
 	exit 0 ;;
 
